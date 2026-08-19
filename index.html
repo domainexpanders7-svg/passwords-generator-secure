@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strong Password Generator & Vault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0d0d;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --accent: #4e9af1;
+            --text: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            margin:0;
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: radial-gradient(at 20% 20%, #1a1a2e 0%, #0d0d0d 70%);
+        }
+        h1 { font-weight: 700; margin: 0; }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 1rem 0;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--shadow);
+            transition: transform .2s ease;
+        }
+        .container:hover { transform: translateY(-2px); }
+        .section { margin-bottom: 2rem; }
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: .8rem;
+            color: var(--accent);
+        }
+        .flex { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; }
+        .flex > * { flex: 1 1 150px; }
+        input[type="range"] { width: 100%; }
+        label { display: flex; align-items: center; gap: .4rem; }
+        button {
+            cursor: pointer;
+            padding: .6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 500;
+            transition: background .2s ease, transform .1s ease;
+        }
+        button:hover { background: #3a78c2; }
+        button:active { transform: scale(0.97); }
+        .output {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: .8rem;
+            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .output span { flex:1; }
+        .output button { margin-left: .5rem; }
+        .vault-list { list-style:none; padding:0; margin:0; }
+        .vault-item {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            margin-bottom: .8rem;
+            padding: .8rem;
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            transition: background .2s;
+        }
+        .vault-item:hover { background: rgba(255,255,255,0.07); }
+        .vault-item div { display: flex; justify-content: space-between; align-items: center; }
+        .vault-item input[type="text"], .vault-item textarea {
+            width: 100%;
+            padding: .4rem;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+        }
+        .vault-item textarea { resize: vertical; }
+        .ad-slot {
+            width: 100%;
+            max-width: 728px;
+            height: 90px;
+            background: rgba(255,255,255,0.07);
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-weight: 500;
+            margin: .5rem 0;
+        }
+        @media (max-width: 600px) {
+            .flex { flex-direction: column; }
+            .flex > * { flex: 1 1 auto; }
+        }
+    </style>
+</head>
+<body>
+    <div id="ad-slot-top" class="ad-slot">[Ad Placeholder Top]</div>
+
+    <div class="container">
+        <h1>Strong Password Generator & Vault</h1>
+
+        <!-- Password Generator Section -->
+        <section class="section" id="generator-section">
+            <div class="section-title">🔐 Password Generator</div>
+            <div class="flex">
+                <label>
+                    Length:
+                    <input type="range" id="length-slider" min="8" max="32" value="16">
+                </label>
+                <span id="length-display">16</span>
+                <label><input type="checkbox" id="include-uppercase" checked> Uppercase</label>
+                <label><input type="checkbox" id="include-lowercase" checked> Lowercase</label>
+                <label><input type="checkbox" id="include-numbers" checked> Numbers</label>
+                <label><input type="checkbox" id="include-symbols" checked> Symbols</label>
+                <button id="generate-btn">Generate</button>
+            </div>
+            <div class="output" id="generated-output" style="margin-top:.8rem; display:none;">
+                <span id="generated-password"></span>
+                <button id="copy-btn">Copy</button>
+            </div>
+        </section>
+
+        <!-- Vault Section -->
+        <section class="section" id="vault-section">
+            <div class="section-title">🗄️ Password Vault</div>
+            <form id="save-form" class="flex" style="flex-wrap:wrap;">
+                <input type="text" id="site-name" placeholder="Site / App" required>
+                <input type="text" id="username" placeholder="Username / Email" required>
+                <input type="text" id="vault-password" placeholder="Password" required>
+                <textarea id="notes" rows="1" placeholder="Notes (optional)"></textarea>
+                <button type="submit">Save</button>
+            </form>
+            <ul class="vault-list" id="vault-list"></ul>
+        </section>
+    </div>
+
+    <div id="ad-slot-bottom" class="ad-slot">[Ad Placeholder Bottom]</div>
+
+    <script>
+        // ---------- Utility ----------
+        const $ = s => document.querySelector(s);
+        const $$ = s => document.querySelectorAll(s);
+
+        // ---------- Password Generator ----------
+        const lengthSlider = $('#length-slider');
+        const lengthDisplay = $('#length-display');
+        const generateBtn = $('#generate-btn');
+        const outputBox = $('#generated-output');
+        const generatedPasswordEl = $('#generated-password');
+        const copyBtn = $('#copy-btn');
+
+        lengthSlider.addEventListener('input', () => {
+            lengthDisplay.textContent = lengthSlider.value;
+        });
+
+        function generatePassword() {
+            const length = +lengthSlider.value;
+            const charset = {
+                lower: 'abcdefghijklmnopqrstuvwxyz',
+                upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                numbers: '0123456789',
+                symbols: '!@#$%^&*()_+~`|}{[]:;?><,./-='
+            };
+            let pool = '';
+            if ($('#include-lowercase').checked) pool += charset.lower;
+            if ($('#include-uppercase').checked) pool += charset.upper;
+            if ($('#include-numbers').checked) pool += charset.numbers;
+            if ($('#include-symbols').checked) pool += charset.symbols;
+            if (!pool) return '';
+
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += pool[Math.floor(Math.random() * pool.length)];
+            }
+            return password;
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const pwd = generatePassword();
+            if (!pwd) {
+                alert('Select at least one character set!');
+                return;
+            }
+            generatedPasswordEl.textContent = pwd;
+            outputBox.style.display = 'flex';
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const pwd = generatedPasswordEl.textContent;
+            navigator.clipboard.writeText(pwd).then(() => {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+            });
+        });
+
+        // ---------- Vault ----------
+        const vaultKey = 'pwVaultEntries';
+        const vaultList = $('#vault-list');
+        const saveForm = $('#save-form');
+
+        function loadVault() {
+            const data = JSON.parse(localStorage.getItem(vaultKey) || '[]');
+            vaultList.innerHTML = '';
+            data.forEach((item, idx) => addVaultItemToDOM(item, idx));
+        }
+
+        function saveVault(data) {
+            localStorage.setItem(vaultKey, JSON.stringify(data));
+            loadVault();
+        }
+
+        function addVaultItemToDOM(item, idx) {
+            const li = document.createElement('li');
+            li.className = 'vault-item';
+            li.dataset.idx = idx;
+            li.innerHTML = `
+                <div><strong>${item.site}</strong> <button class="del-btn">Delete</button></div>
+                <div>Username: <input type="text" value="${item.username}" readonly></div>
+                <div>Password: <input type="text" value="${item.password}" readonly class="pwd-field">
+                    <button class="toggle-pwd">Show</button>
+                </div>
+                ${item.notes ? `<div>Notes: <textarea rows="2" readonly>${item.notes}</textarea></div>` : ''}
+            `;
+            // Delete
+            li.querySelector('.del-btn').addEventListener('click', () => {
+                const entries = JSON.parse(localStorage.getItem(vaultKey) || '[]');
+                entries.splice(idx, 1);
+                saveVault(entries);
+            });
+            // Toggle password visibility
+            const pwdField = li.querySelector('.pwd-field');
+            const toggleBtn = li.querySelector('.toggle-pwd');
+            toggleBtn.addEventListener('click', () => {
+                const visible = pwdField.type === 'text';
+                pwdField.type = visible ? 'password' : 'text';
+                toggleBtn.textContent = visible ? 'Show' : 'Hide';
+            });
+            vaultList.appendChild(li);
+        }
+
+        saveForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const entry = {
+                site: $('#site-name').value.trim(),
+                username: $('#username').value.trim(),
+                password: $('#vault-password').value,
+                notes: $('#notes').value.trim()
+            };
+            const entries = JSON.parse(localStorage.getItem(vaultKey) || '[]');
+            entries.push(entry);
+            saveVault(entries);
+            saveForm.reset();
+        });
+
+        // Initial load
+        loadVault();
+    </script>
+</body>
+</html>
